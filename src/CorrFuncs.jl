@@ -2,11 +2,11 @@ using Images, FileIO
 #using LocalFilters
 using StatsBase
 using AverageShiftedHistograms
-#using BenchmarkTools
+
 using DSP
 #using ImageView
 using FFTW
-using Plots
+
 #using CSV
 #using DataFrames
 
