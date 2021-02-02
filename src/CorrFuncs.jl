@@ -1,10 +1,7 @@
 using Images, FileIO
-#using LocalFilters
 using StatsBase
 using AverageShiftedHistograms
-
 using DSP
-#using ImageView
 using FFTW
 
 #using CSV

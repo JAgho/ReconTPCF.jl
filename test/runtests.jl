@@ -5,7 +5,7 @@ ReconTPCF.loadim("C:/Users/James/.julia/dev/ReconTPCF/test/uniform_circles.png")
 path = "C:/Users/James/.julia/dev/ReconTPCF"
 
 begin
-    test = loadim("uniform_circles.png")
+    test = loadim("./test/uniform_circles.png")
     dims = size(test)#(200,100)
     maxrng = Int64(round(sqrt(dims[1]^2 + dims[2]^2)+1))
     philen = sum(test)#Int(round(0.3*dims[1]*dims[2]))
