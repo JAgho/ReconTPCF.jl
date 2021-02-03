@@ -7,7 +7,7 @@
 Statistical Descriptor based image reconstruction of binary images. Allows for a binary image to evolve via simulated annealing into a energy minimised analogue of the original image, sharing its S2 and C2 to a major extent. Uses surface optimisation to assist the closing of shapes (limiting the range of pixels which are operated on)
 
 ## Install
-Simply add this as a package. Dependencies should be automatically fetched. Call ``Pkg add https://github.com/JAgho/ReconTPCF.jl`` and the files will be downloaded into your julia/dev folder.
+ReconTPCF is implemented as a full Julia package. It may be installed directly from the Julia REPL by first opening the package manager with ``]``. Then call ``Pkg add https://github.com/JAgho/ReconTPCF.jl`` and the files will be downloaded into your julia/dev folder. The toolbox contains some example executions in ``./test``, where the individual files act to load the package with ``using``. These file may simply be run using ``julia -n 12 ./julia/dev/ReconTPCF/test/file.jl`` to use 12 cores. Alternatively, this may be run from VSCode, Atom or the REPL itself.
 
 ## Use
 The test files show how the package may be called with ``using ReconTPCF``, giving access to some of the exposed functions. If internal functions are to be called, either add them to the exports in ReconTPCF.jl, or call them as a method of the package, e.g. as ReconTPCF.foo()
