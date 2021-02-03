@@ -483,6 +483,10 @@ function ediff_test(C2_guess, C2, S2_guess,  S2)
     return (ediff_C2(C2_guess, C2), ediff_S2_fft(S2_guess, S2))
 end
 
+"""
+Fast compution of S2 count for an array of arrays of cartesian indices.
+Multithreaded in the sense that
+"""
 function cluster_stat(clusters, step::Float64, maxrng)
     s1_cache_threads = [zeros(Int64,maxrng) for i in 1:Threads.nthreads()];
     @inbounds @fastmath Threads.@threads for indx in clusters
