@@ -1,7 +1,7 @@
 using ReconTPCF
 using Test
 
-ReconTPCF.loadim("C:/Users/James/.julia/dev/ReconTPCF/test/uniform_circles.png")
+#ReconTPCF.loadim("C:/Users/James/.julia/dev/ReconTPCF/test/uniform_circles.png")
 path = "C:/Users/James/.julia/dev/ReconTPCF"
 
 begin

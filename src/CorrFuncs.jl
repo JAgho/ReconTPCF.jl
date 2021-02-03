@@ -12,7 +12,11 @@ using FFTW
 #returns a 2D array
 
 
+"""
+    pre_proc(Image::im)
 
+convolve image with a disk-shaped structure element
+"""
 function pre_proc(im)
     img = Gray.(im) .> 0.05
     bw = Float64.(img)
@@ -31,9 +35,10 @@ function pre_proc(im)
 end
 
 
-#Computes where an array is >0
-#takes a 2D array
-#returns a 2D array
+"""
+evaluate where an image is
+nonzero
+"""
 function nonzero(image)
     dims = size(image)
      im = Array{Bool}(undef, dims[1], dims[2])
@@ -65,10 +70,11 @@ function pdist(indices)
     return lens
 end
 
-#Computes the number of values in a square lower triangular matrix
-#takes an integer
-#returns an integer
-function Nlen(N)
+"""
+Find the Nth triangular number given N
+"""
+
+function Nlen(Int::N)
     return (N*(N-1))÷ 2
 end
 
@@ -189,6 +195,12 @@ function tpclf(im, SN=0...)
     return C2
 end
 
+
+"""
+Compute a binary disk-shaped structure element
+given radius r on the basis of (areal) interpolation
+
+"""
 function disk_strel(r)
     dim = (2*r)-1
     arr = zeros(Bool, dim, dim)
@@ -234,6 +246,13 @@ function polydisp_iso_circs(dims, r, N)
 return im
 end
 
+
+"""
+Generate isotropically distributed circles that
+may overlap. Keep the implied phase fraction
+ϕ below 0.3 if possible
+
+"""
 function monodisp_circ(dims, R, N)
     x = dims[1]
     y = dims[2]
@@ -411,7 +430,13 @@ function C2_fft(I)
 end
 
 
+"""
+    make_rand_im(philen, dims)
 
+create a random binary array of size dims with
+philen white pixels set within it. Also return
+a coordinate list for white and black pixels
+"""
 function make_rand_im(philen, dims)
     idx = CartesianIndices((dims))
     #println(length(idx))
@@ -427,6 +452,11 @@ function make_rand_im(philen, dims)
     return im, (wpix, bpix)
 end
 
+
+"""
+Select a random white and black pixel from a tupled
+pair of lists of cartesian coordinates
+"""
 function get_rand_pix((pix))::Tuple{Array{CartesianIndex{2},1},Array{CartesianIndex{2},1}}
     wpick = [sample(pix[1])]
     bpick = [sample(pix[2])]
@@ -453,14 +483,9 @@ function ediff_test(C2_guess, C2, S2_guess,  S2)
     return (ediff_C2(C2_guess, C2), ediff_S2_fft(S2_guess, S2))
 end
 
-function cluster_stat(clusters
-    , step::Float64, maxrng)
-
-
+function cluster_stat(clusters, step::Float64, maxrng)
     s1_cache_threads = [zeros(Int64,maxrng) for i in 1:Threads.nthreads()];
-    #dump(s1_cache_threads)
     @inbounds @fastmath Threads.@threads for indx in clusters
-        #println(length(indx))
         s1_cache_threads[Threads.threadid()] .+= blas_stat_st2(indx, step, maxrng)
     end
     f = zeros(Int64, length(s1_cache_threads[1]))
@@ -536,7 +561,12 @@ function SN_comp(dims::Tuple{Int64,Int64},  maxrng::Int64)::Array{Int64,1}
 end
 
 
-
+"""
+    inner_blas2(x, y, dist, len)
+compute the lower triangular self-interaction matrix of a list of N items.
+gives a flat vector of F32, of length (N(N-1)/2). Interaction here is computing
+the L2 norm, but could be otherwise.
+"""
 function inner_blas2(x::Array{Float32,1}, y::Array{Float32,1}, dist::Array{Float32,1}, len::UInt64)
     @fastmath @inbounds for i = 1:len
         #println("left = ", (triang(i-1)+1), "\tright = ", triang(i))
@@ -544,6 +574,12 @@ function inner_blas2(x::Array{Float32,1}, y::Array{Float32,1}, dist::Array{Float
     end
 end
 
+"""
+    blas_stat_st2(indx, step, maxrng)
+For a set of N points, compute the unique distance between all possible pairs of
+points. Bins distance measurements with a histogram of bin width step and length maxrng
+Single threaded implementation, greedy with memory. Good for smaller computations
+"""
 function blas_stat_st2(indx
     , step::Float64, maxrng)
     F = Tuple.(indx)
@@ -563,10 +599,21 @@ function triang(n::Int64)::Int64
     return (n*(n+1))÷2
 end
 
+
+"""
+Compute the L2 norm between points (xi, yi) and the arrays (arrx, arry) and write
+to preallocated array dist
+"""
 function fragment!(dist, arrx, arry, xi, yi)
     dist .= sqrt.((arrx .- xi) .^2 .+ (arry .- yi) .^2)
 end
 
+
+"""
+Computes a very fast multithreaded probabilistic S2 count. Employs kernel density
+estimation in place of a true histogram. Gives hilarious results when used
+for reconstruction.
+"""
 function blas_stat4(indx
     , step::Float64, maxrng)::Array{Int64,1}
     F = Tuple.(indx)
@@ -587,32 +634,44 @@ function blas_stat4(indx
     return f
 end
 
-function blas_stat5(indx
-    , maxrng)
+
+"""
+Compute the S2 count (multithreaded, O(N) memory)
+
+For a list of N CartesianIndex tuples, compute and bin the L2 norm between all pixel
+pairs in the list.
+"""
+function blas_stat5(indx, maxrng)
     F = Tuple.(indx)
     x, y= Float32.(first.(F)), Float32.(last.(F))
     len = size(x)[1]
     primer = Array{Float32}([])
-    _s1_cache_threads = [zeros(Int64,maxrng) for i in 1:Threads.nthreads()];
-    _dist_cache_threads = [zeros(Float32, len) for i in 1:Threads.nthreads()]
+    cnt_thrd = [zeros(Int64,maxrng) for i in 1:Threads.nthreads()];
+    dist_thrd = [zeros(Float32, len) for i in 1:Threads.nthreads()]
 
     @inbounds @fastmath Threads.@threads for i = 1:len
-        fragment!(view(_dist_cache_threads, Threads.threadid())[1], x, y, x[i], y[i] )
-        view(_s1_cache_threads, Threads.threadid())[1] .+=  fit(Histogram, view(_dist_cache_threads[Threads.threadid()], i:len), 0:1:maxrng).weights
+        fragment!(view(dist_thrd, Threads.threadid())[1], x, y, x[i], y[i] )
+        view(cnt_thrd, Threads.threadid())[1] .+=  fit(Histogram, view(dist_thrd[Threads.threadid()], i:len), 0:1:maxrng).weights
     end
-    f = zeros(Int64, length(_s1_cache_threads[1]))
-    for i in 1:Threads.nthreads(); f = f .+ _s1_cache_threads[i]; end
+    f = zeros(Int64, length(cnt_thrd[1]))
+    for i in 1:Threads.nthreads(); f = f .+ cnt_thrd[i]; end
     #f[1] = f[1] - Threads.nthreads()
     return f
 end
 
-
+"""
+Get list of all surface pixels from a 2d binary image using convolution to discriminate
+"""
 function surf_opt2(im::Array{Bool,2})::Tuple{Array{CartesianIndex{2},1},Array{CartesianIndex{2},1}}
     edge_kern::Array{Int64} = [1 1 1; 1 10 1; 1 1 1]
     arrim::Array{Int64,2} = conv(im, edge_kern)
     return (findall(in(10:17), arrim), findall(in(1:8), arrim))
 end
 
+"""
+Get list of all surface pixels from a 2d binary image using convolution to discriminate
+Sanitised version to prevent the function returning nothing
+"""
 function surf_opt(im::Array{Bool,2})::Tuple{Array{CartesianIndex{2},1},Array{CartesianIndex{2},1}}
     edge_kern::Array{Int64} = [1 1 1; 1 10 1; 1 1 1]
     arrim::Array{Int64,2} = conv(im, edge_kern)[2:end-1, 2:end-1]
@@ -629,6 +688,10 @@ function surf_opt(im::Array{Bool,2})::Tuple{Array{CartesianIndex{2},1},Array{Car
     end
 end
 
+"""
+Update tuple of 2 cartesian indices by swapping elements from each list at linear
+index wpick (for 1) and bpick (for 0)
+"""
 function swap_pix(guess, pix, wpick, bpick)
     #println("swap_pix : \t\twpix length = ", length(pix[1])," bpix length = ", length(pix[2]) )
     guess[pix[1][wpick]] = false ##THIS IS THE DANGER ZONE
@@ -639,6 +702,11 @@ function swap_pix(guess, pix, wpick, bpick)
     return (pix)
 end
 
+
+"""
+Computes equivalent position of unique entry in a shortlist to an entry in a master
+list. Uses a much more sensible tupled pick
+"""
 function find_equivalent(shortlist, pix, pick_s)
     wcart = shortlist[1][pick_s[1]]
     bcart = shortlist[2][pick_s[2]]
@@ -650,11 +718,17 @@ function find_equivalent(shortlist, pix, pick_s)
     return (wrand, brand)
 end
 
-
+"""
+Find the intersection between two tupled lists of cartesian indices
+We use this to create a segment of a list that maintains ordering
+"""
 function surf_rand(surf_res, pix)
     return (intersect(surf_res[1], pix[1]), (intersect(surf_res[2], pix[2])))
 end
 
+"""
+Selects random elements in a pair of lists
+"""
 function pick_rand_coord(list::Tuple{Array{CartesianIndex{2},1},Array{CartesianIndex{2},1}})::Tuple{Int64, Int64}
     wpick = rand(1:length(list[1]))
     #println("pick_rand_coord : \twlen = ", length(list[1]), "\tblen = ", length(list[2]))
@@ -663,6 +737,9 @@ function pick_rand_coord(list::Tuple{Array{CartesianIndex{2},1},Array{CartesianI
     return wpick, bpick
 end
 
+"""
+Fetch the region around a pixel selection; give a reduced window if near an edge
+"""
 function fetch_locale(im, pix, kern, wpick, bpick)
     re, be = size(im)[1], size(im)[2]
     wp = pix[1][wpick]
@@ -682,6 +759,11 @@ function fetch_locale(im, pix, kern, wpick, bpick)
     return (a, b)
 end
 
+
+"""
+Prevent fetch_locale from colliding with image edges by providing a reduced
+window if an edge is collided with
+"""
 function check_edge(p, re, be)
     kern = CartesianIndices((-1:1, -1:1))
     l1 = -1
@@ -710,6 +792,10 @@ function check_edge(p, re, be)
     return kern
 end
 
+"""
+Find all unique values present in a small window into the region adjacent to a
+pixel selection. Used to interrogate a cluster labelled image
+"""
 function get_region_names(regions)
     w1 = unique(regions[1][1])
     w2 = unique(regions[2][1])
@@ -718,11 +804,18 @@ function get_region_names(regions)
     return ((w1, b1),(w2, b2))
 end
 
-
+"""
+Deduct the contribution of a given set of pixels from a previously calculated
+S2 count
+"""
 function subtract_cluster(hist, cluster)
     hist .= hist .- blas_stat_st2(cluster, 1.0, 100)
 end
 
+"""
+Examine which clusters are present in multiple windows simultaneously to determine
+which clusters are due to change from a pixel swap
+"""
 function find_unique_regions(names)
     olds = filter(x->x!=0,union(names[1][1], names[1][2]))
     news = filter(x->x!=0,union(names[2][1], names[2][2]))
@@ -730,25 +823,33 @@ function find_unique_regions(names)
     return (olds, news)
 end
 
+"""
+Compute the C2 count in an image. Serves as a starting point for a reconstruction
+"""
 function C2_initialise(im, maxrng::Int64)
     comps = component_subscripts(label_components(im, trues(3,3)))[2:end]
     BN = zeros(Int64, maxrng)
     #for comp in comps
     #println(length(comp))
     #end
-
     BN .= (BN .+ 2 .* (cluster_stat((comps), 1.0, maxrng)))
-
     return BN
 end
 
+"""
+Sloppy computation to find the contribution to C2 count from the old state and the
+new, and hence the difference between them.
+"""
 function compute_change!(subtract, add, clusts_old, clusts_new, maxrng)
-    #dump(clusts_old)
     for clust in clusts_old; subtract .= subtract .+ blas_stat5(clust, maxrng);  end
     for clust in clusts_new; add      .= add .+ blas_stat5(clust, maxrng); end
-    return  add , subtract
+    return  add, subtract
 end
 
+
+"""
+Eliminates NaN and Inf in an array
+"""
 function naninf(arr)
     for i=1:length(arr)
         if isnan(arr[i]) | isinf(arr[i])
@@ -758,6 +859,10 @@ function naninf(arr)
     return arr
 end
 
+
+"""
+Computes the C2 count change between a pair of images with one pixel swapped between them
+"""
 function update_C2_BN(BN, pix, original::Array{Int64, 2}, modified::Array{Int64, 2}, wpick, bpick, maxrng)
     kern = CartesianIndices((-1:1, -1:1))
     names = get_region_names((fetch_locale(original, pix, kern, wpick, bpick), fetch_locale(modified, pix, kern, wpick, bpick)))
@@ -776,6 +881,9 @@ function update_C2_BN(BN, pix, original::Array{Int64, 2}, modified::Array{Int64,
     return  (add .- subtract) .* 2
 end
 
+"""
+Fuses clusters to reduce the scale of the problem
+"""
 function get_clusters(old, new, original, modified)
     clusts_old = [CartesianIndex{2}[]]
     clusts_new=  [CartesianIndex{2}[]]
@@ -787,6 +895,11 @@ function get_clusters(old, new, original, modified)
     return clusts_old, clusts_new
 end
 
+
+"""
+Compute the update to S2 count. Find the contribution from
+all white pixel's distance from wpick and bpick, and the difference between them
+"""
 function update_S2_BN(BN, pix, wpick, bpick, philen, maxrng)
     wp = pix[1][wpick]
     bp = pix[2][bpick]
@@ -804,16 +917,27 @@ function update_S2_BN(BN, pix, wpick, bpick, philen, maxrng)
     #println("ash is of length ", length(subtract))
     return (add .- subtract) .* 2
 end
+
+"""
+Find the S2 count for an image
+"""
 function S2_initialise(pix, maxrng)
      (2 .* (blas_stat5(pix[1], maxrng)))
 end
 
+"""
+Normalise S2 count into S2 proper by dividing by BN and ϕ
+"""
 function S2_finalise(SN, BN, im)
     dims = size(im)
     BN =  (BN ./ sum(im))
     S2 = ((sum(im)/length(im)) .* (BN ./ (SN ./ length(im))))
 end
 
+
+"""
+Loads and thresholds an image
+"""
 function loadim(fname::String)::Array{Bool, 2}
     img::Array{Bool, 2} = (Gray.(load(fname))) .< 0.50
 end
