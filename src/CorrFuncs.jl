@@ -36,6 +36,8 @@ end
 
 
 """
+    nonzero(image)
+
 evaluate where an image is
 nonzero
 """
@@ -454,6 +456,8 @@ end
 
 
 """
+    get_rand_pix((pix))::Tuple{Array{CartesianIndex{2},1},Array{CartesianIndex{2},1}}
+
 Select a random white and black pixel from a tupled
 pair of lists of cartesian coordinates
 """
@@ -484,6 +488,8 @@ function ediff_test(C2_guess, C2, S2_guess,  S2)
 end
 
 """
+    cluster_stat(clusters, step::Float64, maxrng)
+
 Fast compution of S2 count for an array of arrays of cartesian indices.
 Multithreaded in the sense that
 """
@@ -509,7 +515,11 @@ function findlens(list, lower, upper)::Tuple{Int64,Int64}
     end
 end
 
+"""
+    C2_pdist4(im, maxrng::Int64, SN::Array{Float64,1}=Array{Float64}(undef, 0))
 
+Fast total computation of the C2 count for a
+"""
 function C2_pdist4(im, maxrng::Int64, SN::Array{Float64,1}=Array{Float64}(undef, 0))
 
     comps = component_subscripts(label_components(im, trues(3,3)))[2:end]
@@ -614,6 +624,8 @@ end
 
 
 """
+    blas_stat4(indx, step::Float64, maxrng)::Array{Int64,1}
+
 Computes a very fast multithreaded probabilistic S2 count. Employs kernel density
 estimation in place of a true histogram. Gives hilarious results when used
 for reconstruction.

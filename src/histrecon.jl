@@ -1,4 +1,18 @@
-function histrecon_u(dims, C2, S2, philen)
+"""
+    histrecon_u(dims, C2, S2, philen)
+
+Reconstruct a binary image on the basis of input C2 and S2. The size of the
+reconstructed image is determined by ``dims``, and the number of pixels set to
+one by ``philen``
+
+This returns a full suite of statistics about the reconstructed object to check
+stability.
+
+# Example
+    dims, C2, S2, philen = get_C2_S2(fname)
+    guess, S2n, C2n, S2_BN1, C2_BN1, SN1 = histrecon((200, 200)), C2, S2, 12000)
+"""
+function histrecon(dims, C2, S2, philen)
     guess, pix = make_rand_im(philen, dims)
     display(heatmap(guess, color=:grays, aspect_ratio=1))
     maxrng = Int64(round(sqrt(dims[1]^2 + dims[2]^2)+1))
@@ -73,7 +87,6 @@ function histrecon_u(dims, C2, S2, philen)
             cont_break += 1
 
         end
-
          # we bake in the change here - this must be undone
         if (mod(true_count, 1000) == 0) & (count !=pflag)
             println("\ncount is ", count, "\t  True count is ", true_count, "\t prob of rejection =", min(exp(delErr/T), 1), "\t  S2 Err = ", ediff_S2_fft(S2n,  S2)*1250/length(guess), "\t C2 Err = ",  ediff_C2(C2n, C2))
@@ -87,22 +100,40 @@ function histrecon_u(dims, C2, S2, philen)
             #println(Err1)
             pflag = count
         end
-
-
-
         if count==4000
             cont_surf_opt=1
             #println("Changed to surface optimisation mode")
         end
-
         if true_count >= 10000
 
             break
         end
-
-
-
-
     end
     return guess, S2n, C2n, S2_BN, C2_BN, SN
+end
+
+
+"""
+    get_C2_S2(fname)
+
+Compute C2 and S2 for an existing binary image ``fname``
+"""
+function get_C2_S2(fname)
+    test = loadim(fname)
+    dims = size(test)
+    maxrng = Int64(round(sqrt(dims[1]^2 + dims[2]^2)+1))
+    philen = sum(test)
+    SN = SN_comp(dims, maxrng)
+
+
+    idx = CartesianIndices(dims)
+    wpix = findall(x->x==true, test)
+    bpix = setdiff(idx, wpix)
+    pix = (wpix, bpix)
+    S2N = S2_initialise(pix, maxrng)
+    S2 = naninf(S2_finalise(SN, S2N, test))
+    #S2[length(S2)÷2:end] .= 0
+    C2N = C2_initialise(test, maxrng)
+    C2 = naninf(S2_finalise(SN, C2N, test))
+    return (dims, C2, S2, philen)
 end
