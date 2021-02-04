@@ -72,13 +72,6 @@ function pdist(indices)
     return lens
 end
 
-"""
-Find the Nth triangular number given N
-"""
-
-function Nlen(Int::N)
-    return (N*(N-1))÷ 2
-end
 
 #Computes the euclidian distance between a pair of CartesianIndex tuples
 #takes a tuple of two CartesianIndex tuples
