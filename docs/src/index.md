@@ -1,3 +1,10 @@
-```@docs
-pre_proc(Image::im)
+```@meta
+CurrentModule = ReconTPCF
+DocTestSetup = quote
+    using ReconTPCF
+end
+```
+
+```@autodocs
+Modules = [ReconTPCF]
 ```

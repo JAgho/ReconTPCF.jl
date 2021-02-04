@@ -13,7 +13,7 @@ using FFTW
 
 
 """
-    pre_proc(Image::im)
+    pre_proc(im)
 
 convolve image with a disk-shaped structure element
 """
