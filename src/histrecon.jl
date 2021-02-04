@@ -14,7 +14,7 @@ stability.
 """
 function histrecon(dims, C2, S2, philen)
     guess, pix = make_rand_im(philen, dims)
-    display(heatmap(guess, color=:grays, aspect_ratio=1))
+    #display(heatmap(guess, color=:grays, aspect_ratio=1))
     maxrng = Int64(round(sqrt(dims[1]^2 + dims[2]^2)+1))
     wpick = rand(1:length(pix[1]))
     bpick = rand(1:length(pix[2]))
@@ -104,7 +104,7 @@ function histrecon(dims, C2, S2, philen)
             cont_surf_opt=1
             #println("Changed to surface optimisation mode")
         end
-        if true_count >= 10000
+        if true_count >= 10
 
             break
         end

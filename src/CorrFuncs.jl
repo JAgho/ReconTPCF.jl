@@ -518,7 +518,9 @@ end
 """
     C2_pdist4(im, maxrng::Int64, SN::Array{Float64,1}=Array{Float64}(undef, 0))
 
-Fast total computation of the C2 count for a
+Fast total computation of the C2 count for an array of arrays of cartesian indices
+This version splits the problem by the type of cluster, selecting an appropriate
+algorithm to suit the scale of each component.
 """
 function C2_pdist4(im, maxrng::Int64, SN::Array{Float64,1}=Array{Float64}(undef, 0))
 
@@ -569,7 +571,11 @@ function C2_pdist4(im, maxrng::Int64, SN::Array{Float64,1}=Array{Float64}(undef,
     return C2, BN
 end
 
+"""
+    SN_comp(dims::Tuple{Int64,Int64},  maxrng::Int64)
 
+Wrapper for ```blas_stat5``` acting as a function barrier
+"""
 function SN_comp(dims::Tuple{Int64,Int64},  maxrng::Int64)::Array{Int64,1}
     2 .* blas_stat5(vec(CartesianIndices(dims)), maxrng)
 end
@@ -577,6 +583,7 @@ end
 
 """
     inner_blas2(x, y, dist, len)
+
 compute the lower triangular self-interaction matrix of a list of N items.
 gives a flat vector of F32, of length (N(N-1)/2). Interaction here is computing
 the L2 norm, but could be otherwise.
@@ -590,12 +597,12 @@ end
 
 """
     blas_stat_st2(indx, step, maxrng)
+
 For a set of N points, compute the unique distance between all possible pairs of
 points. Bins distance measurements with a histogram of bin width step and length maxrng
 Single threaded implementation, greedy with memory. Good for smaller computations
 """
-function blas_stat_st2(indx
-    , step::Float64, maxrng)
+function blas_stat_st2(indx, step::Float64, maxrng)
     F = Tuple.(indx)
     x, y= Float32.(first.(F)), Float32.(last.(F))
     dist = Vector{Float32}(undef,triang(length(x)))
@@ -720,8 +727,10 @@ end
 
 
 """
+    find_equivalent(shortlist, pix, pick_s)
+    
 Computes equivalent position of unique entry in a shortlist to an entry in a master
-list. Uses a much more sensible tupled pick
+list. Uses a much more sensible tupled pick - should use that everywhere
 """
 function find_equivalent(shortlist, pix, pick_s)
     wcart = shortlist[1][pick_s[1]]

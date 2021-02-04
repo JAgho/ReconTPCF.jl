@@ -10,12 +10,23 @@ ReconTPCF is a toolbox for the (re)construction of binary images based on the me
  ## Installation
 
  ReconTPCF is a Julia package and hence may be installed simply using the package manager:
-```@repl index
-julia> ]
-pkg> add https://github.com/JAgho/ReconTPCF.jl
+```
+    julia> ]
+    pkg> add https://github.com/JAgho/ReconTPCF.jl
 ```
 This will add the package and any dependencies it has.
 
 ## Using ReconTPCF For Reconstruction
 
-it can be run with ```using ReconTPCF``
+Calling ```using ReconTPCF``` will give access to its
+exported functions. This includes ```get_C2_S2(fname)``` and ```histrecon()``` which are an initialiser and the main reconstruction loop respectively. Histrecon is presently adjusted by modifying its function definition. A typical use of it would look like:
+```
+    dims, C2, S2, philen = get_C2_S2(fname)
+    guess, S2n, C2n, S2_BN1, C2_BN1, SN1 = histrecon((200, 200)), C2, S2, 12000)
+```
+Further detail regarding the algorithm is given in its own page in the sidebar
+
+
+## Using ReconTPCF for Computing The Two-Point Correlation Function
+
+ReconTPCF has fast algorithms for computing S2 for large and small collections in several ways. For long lists of points, a multithreaded implementation is provided; ```blas_stat5```. For shorter lists a single thread function is given; ```blas_stat_st2```. These functions consider all unique pairs in the list and compute the L2 norm for these. These are histogrammed according to the secondary arguments of these functions.

@@ -8,5 +8,6 @@ makedocs(root ="./docs",
         sitename="ReconTPCF.jl",
         doctest = true,
         modules = [ReconTPCF],
-        pages = ["index.md", "histrecon.md", "library.md"]
+        pages = ["index.md", "histrecon.md", "library.md"],
+        format = Documenter.HTML(prettyurls = false)
         )
