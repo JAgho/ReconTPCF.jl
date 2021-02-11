@@ -2,8 +2,8 @@
     histrecon_u(dims, C2, S2, philen)
 
 Reconstruct a binary image on the basis of input C2 and S2. The size of the
-reconstructed image is determined by ``dims``, and the number of pixels set to
-one by ``philen``
+reconstructed image is determined by ```dims```, and the number of pixels set to
+one by ```philen```
 
 This returns a full suite of statistics about the reconstructed object to check
 stability.
@@ -116,7 +116,7 @@ end
 """
     get_C2_S2(fname)
 
-Compute C2 and S2 for an existing binary image ``fname``
+Compute C2 and S2 for an existing binary image ```fname```
 """
 function get_C2_S2(fname)
     test = loadim(fname)
