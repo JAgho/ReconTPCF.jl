@@ -605,15 +605,15 @@ function blas_stat_st2(indx, step::Float64, maxrng)
     return fit(Histogram, dist, 0:step:(maxrng)).weights
 end
 
-function blas_stat_st2(x::Array{Float64,1}, y::Array{Float64,1}, step::Float64, maxrng)
-    F = Tuple.(indx)
-    x, y= Float32.(first.(F)), Float32.(last.(F))
-    dist = Vector{Float32}(undef,triang(length(x)))
-    len::UInt64 = length(x)
-    inner_blas2(x, y, dist, len)
-    #print(length(fit(Histogram, dist, 0:step:(maxrng)).weights))
-    return fit(Histogram, dist, 0:step:(maxrng)).weights
-end
+# function blas_stat_st2(x::Array{Float64,1}, y::Array{Float64,1}, step::Float64, maxrng)
+#     F = Tuple.(indx)
+#     x, y= Float32.(first.(F)), Float32.(last.(F))
+#     dist = Vector{Float32}(undef,triang(length(x)))
+#     len::UInt64 = length(x)
+#     inner_blas2(x, y, dist, len)
+#     #print(length(fit(Histogram, dist, 0:step:(maxrng)).weights))
+#     return fit(Histogram, dist, 0:step:(maxrng)).weights
+# end
 
 function triang(n::UInt64)::UInt64
     return (n*(n+1))÷2
