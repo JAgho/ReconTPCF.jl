@@ -125,13 +125,13 @@ function tile_dist(points::Array{Float64,2}, histo::Array{Int64,1}, rmax::Int64,
                                  view(histos, Threads.threadid())[1],
                                  rmax,
                                  nbins)
-            #print("\nirange = ", (i*bsize)+1, ":", ((i+1)*bsize))
+            print("\nirange = ", (i*bsize)+1, ":", ((i+1)*bsize))
             #make thread with self_routine(myblocks)
         end
-        @sync for il in 1:bsize:N-bsize
-            for jl in il+bsize:bsize:N-bsize
-                #println("il: ", il, "\t\tir: ", ir)
-                #println("jl: ", jl, "\t\tjr: ", jr)
+        @sync for il in 1:bsize:N+1
+            for jl in il+bsize:bsize:N-bsize+1
+                println("il: ", il, "\t\tir: ", il+bsize-1)
+                println("jl: ", jl, "\t\tjr: ", jl+bsize-1)
                 Threads.@spawn dist2(view(points, il:il+bsize-1, :),
                         view(points, jl:jl+bsize-1, :),
                         view(histos, Threads.threadid())[1],
@@ -145,14 +145,17 @@ function tile_dist(points::Array{Float64,2}, histo::Array{Int64,1}, rmax::Int64,
 end
 
 using FLoops
-points = rand(10000, 2)
+points = rand(1100, 2)
 points2 = points.+1
 hist = zeros(Int, 100)
 
-@time tile_dist(points, hist, 5, 100)
+tile_dist(points, hist, 5, 100)
+@trace dist1(points, zeros(Int, 100), 100, 100)
+@code_warntype dist2(points, points.+1, zeros(Int, 100), 100, 100)
+
 
 sum(hist)
-print(dist1(points, hist, 68, 100))
+dist1(points, hist, 5, 100)
 print(f)
 view(points, 10:20, :)
 points[10:20, :]
@@ -171,8 +174,7 @@ staircase_looper(zeros(500), 100)
 
 
 
-@btime dists(points, zeros(Int, 100), 100, 100)
-@code_warntype dist2(points, points.+1, zeros(Int, 100), 100, 100)
+
 @btime dist3(points, points2, hist, 100, 100)
 for i in 1:100
     dist1(points,  hist, 100, 100)
@@ -183,9 +185,12 @@ end
 
 
 
+function solvequadratic(a, b, c)
+    d = sqrt(b^2 - 4a*c)
+    (-b - d) / 2a, (-b + d) / 2a
+end
 
-
-
+solvequadratic(-0.5, 999.5, -90000.0)
 
 
 
